@@ -9,6 +9,13 @@
 #define STATE_TimeOver  3
 #define STATE_Break     4
 
+#define DELAY_GameInit  1     // reduced delay to register button press
+#define DELAY_Game      100
+#define DELAY_TimeOver  100
+#define DELAY_Break     10    // reduced delay to register button press
+
+#define MAX_Score       15
+
 uint8_t   State;
 uint32_t  Delay;
 uint64_t  Score;
@@ -16,23 +23,26 @@ uint16_t  ID_Chip;
 
 
 // Team Variables
+//Team 1 is left / Team 2 is right, seen from the display
 String    Teams_Current[2];
 String    Teams_Next[2];
 uint16_t  TeamID_Current[2];
 uint16_t  TeamID_Next[2];
 
 void setup() {
-  // ======================= Init Serial =======================
+  // =======================(Init Serial)=======================
+
   
   // ====================== Init Display ======================= 
+
   
   // ====================== Init Sensors =======================
 
+
   // =================== Init Communication ====================
 
-  // ======================== Init Main ========================
 
-  
+  // ======================== Init Main ========================
   State = STATE_GameInit;
   Delay = 100;
   Score = 0;
@@ -46,18 +56,22 @@ void loop() {
   
   switch (State){
     case STATE_GameInit :
+      Delay = DELAY_GameInit;
       State = GameInit();
       break;
       
     case STATE_Game :
+      Delay = DELAY_Game;
       State = Game();
       break;
       
     case STATE_TimeOver :
+      Delay = DELAY_TimeOver;
       State = TimeOver();
       break;
       
     case STATE_Break :
+      Delay = DELAY_Break;
       State = Break();
       break;
   }
@@ -69,42 +83,63 @@ void loop() {
 
 // ==================================== State Functions ==================================== 
 uint8_t GameInit(){
+  //________________________________________________________________________________________
   // 1) Make sure new score is set / old score is not copied
   // 2) Allow teams to switch sides on the board
-
+  //
   // Exit Condition 1: One Team reaches 3 points      Go To: STATE_Game
   // Exit Condition 2: Time is over                   Go To: STATE_TimeOver
+  //________________________________________________________________________________________
+
+  // ++++++++++++++++ TODO ++++++++++++++++
 }
 
 uint8_t Game(){
+  //________________________________________________________________________________________
   // 1) Keep track of the score
   // 2) Do not allow team-side changes anymore
-
-  // Exit Condition 1: One team reaches 15 points     Go To: STATE_Break
+  // 
+  // Exit Condition 1: One team reaches max score     Go To: STATE_Break
   // Exit Condition 2: Time is over                   Go To: STATE_TimeOver
+  //________________________________________________________________________________________
+
+  // ++++++++++++++++ TODO ++++++++++++++++
 }
 
 uint8_t TimeOver(){
+  //________________________________________________________________________________________
   // 1) Score difference >= 2 || 0 -> No Universe / currently Universe
   // 2) Score difference == 1 -> Possible Universe
-
+  //
   // Exit Condition 1: Point was scored, no Universe  Go To: STATE_Break
+  //________________________________________________________________________________________
+
+  // ++++++++++++++++ TODO ++++++++++++++++
 }
 
 uint8_t Break(){
+  //________________________________________________________________________________________
   // 1) Wait until GameTime is running (Display Count Down?)
   // 2) Allow Teams to switch sides 
+  //________________________________________________________________________________________
+
+  // ++++++++++++++++ TODO ++++++++++++++++
 }
+
+
+
 
 // ================================= Additional Functions  ================================= 
 
 void ReadInbox(){
-  
+  // ++++++++++++++++ TODO ++++++++++++++++
 }
 
+
 void SendScore(){
-  
+  // ++++++++++++++++ TODO ++++++++++++++++
 }
+
 
 void SetScore(uint16_t ScoreT1, uint16_t ScoreT2){
 // [0..15]  Team ID 1
@@ -113,4 +148,36 @@ void SetScore(uint16_t ScoreT1, uint16_t ScoreT2){
 // [48..63] Score Team 2
 
 Score = TeamID_Current[0] | (uint64_t)ScoreT1<<16 | (uint64_t)TeamID_Current[0]<<32 | (uint64_t)ScoreT2<<48;
+}
+
+
+uint16_t ReadScore(uint8_t team){
+  if(team & 1){
+    // ++++++++++++++++ TODO ++++++++++++++++
+  }
+  else{
+    // ++++++++++++++++ TODO ++++++++++++++++
+  }
+}
+
+
+void SwitchTeams(){
+  // Names
+  String newT2      = Teams_Current[0];
+  Teams_Current[0]  = Teams_Current[1];
+  Teams_Current[1]  = newT2;
+
+  // IDs
+  uint16_t newT2ID  = TeamID_Current[0];
+  TeamID_Current[0] = TeamID_Current[0];
+  TeamID_Current[0] = newT2ID;
+}
+
+
+void DisplayTeams(){
+  // Display Teams with arrow
+  // Team 1 is left
+  // Team 2 is right
+
+  // ++++++++++++++++ TODO ++++++++++++++++
 }
