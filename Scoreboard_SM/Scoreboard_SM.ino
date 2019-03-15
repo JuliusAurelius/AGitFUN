@@ -15,12 +15,16 @@
 #define DELAY_Break     10    // reduced delay to register button press
 
 #define MAX_Score       15
+#define MAX_Score_Hist  4
 
 uint8_t   State;
 uint8_t   StateOld;
 uint32_t  Delay;
-uint64_t  Score;
+uint64_t  Score;              // Message to Motherchip
 uint16_t  ID_Chip;
+uint16_t  Score_Hist[2][MAX_Score_Hist];
+uint32_t  iHist;
+bool      TimeIsOver;
 
 
 // Team Variables
@@ -47,7 +51,8 @@ void setup() {
   State = STATE_GameInit;
   Delay = 100;
   Score = 0;
-
+  iHist = 0;
+  TimeIsOver = false;
   ID_Chip = 1;
 }
 
@@ -59,11 +64,13 @@ void loop() {
     case STATE_GameInit :
       // Init state
       if(StateOld != STATE_GameInit){
+        TimeIsOver = false;
         
-        Delay = DELAY_GameInit;
-        StateOld = STATE_GameInit;
+        DisplayTeams();
+        
+        Delay     = DELAY_GameInit;
+        StateOld  = STATE_GameInit;
       }
-      
       
       State = GameInit();
       break;
@@ -71,11 +78,9 @@ void loop() {
     case STATE_Game :
       // Init state
       if(StateOld != STATE_Game){
-        
-        Delay = DELAY_Game;
-        StateOld = STATE_Game;
+        Delay     = DELAY_Game;
+        StateOld  = STATE_Game;
       }
-      
       
       State = Game();
       break;
@@ -83,9 +88,9 @@ void loop() {
     case STATE_TimeOver :
       // Init state
       if(StateOld != STATE_TimeOver){
-        
-        Delay = DELAY_TimeOver;
-        StateOld = STATE_TimeOver;
+        TimeIsOver  = false;
+        Delay       = DELAY_TimeOver;
+        StateOld    = STATE_TimeOver;
       }
       
       
@@ -95,9 +100,9 @@ void loop() {
     case STATE_Break :
       // Init state
       if(StateOld != STATE_Break){
-        
-        Delay = DELAY_Break;
-        StateOld = STATE_Break;
+        TimeIsOver  = false;
+        Delay       = DELAY_Break;
+        StateOld    = STATE_Break;
       }
       
       State = Break();
@@ -131,7 +136,49 @@ uint8_t Game(){
   // Exit Condition 2: Time is over                   Go To: STATE_TimeOver
   //________________________________________________________________________________________
 
-  // ++++++++++++++++ TODO ++++++++++++++++
+  uint16_t scoreT1 = ReadScore(1);
+  uint16_t scoreT2 = ReadScore(2);
+
+  Score_Hist[1][iHist] = scoreT1;
+  Score_Hist[2][iHist] = scoreT2;
+  
+  iHist++;
+  if (iHist==MAX_Score_Hist){
+    iHist = 0;
+  }
+
+
+  // Publish score
+  SetScore(scoreT1, scoreT2);
+  SendScore();
+  DisplayTeams(scoreT1, scoreT2);
+
+
+  // If one team got to max score wait until the score has been confirmed through 
+  // multiple measurements.
+  if(scoreT1 == MAX_Score || scoreT2 == MAX_Score){
+    bool T1_won = true;
+    bool T2_won = true;
+
+    for(int i=0;i<MAX_Score_Hist;i++){
+      if(Score_Hist[1][i]<MAX_Score){
+        T1_won = false;
+      }
+      if(Score_Hist[1][i]<MAX_Score){
+        T2_won = false;
+      }
+    } // end Hist check
+
+    if(T1_won || T2_won){
+      return STATE_Break;
+    }
+  }
+  else{
+    if(TimeIsOver){
+      return STATE_TimeOver;
+    }
+    return STATE_Game;
+  }
 }
 
 uint8_t TimeOver(){
@@ -203,6 +250,14 @@ void SwitchTeams(){
 
 
 void DisplayTeams(){
+  // Display Teams with arrow
+  // Team 1 is left
+  // Team 2 is right
+
+  // ++++++++++++++++ TODO ++++++++++++++++
+}
+
+void DisplayTeams(uint16_t score1, uint16_t score2){
   // Display Teams with arrow
   // Team 1 is left
   // Team 2 is right
