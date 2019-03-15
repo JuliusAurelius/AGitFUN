@@ -17,6 +17,7 @@
 #define MAX_Score       15
 
 uint8_t   State;
+uint8_t   StateOld;
 uint32_t  Delay;
 uint64_t  Score;
 uint16_t  ID_Chip;
@@ -36,7 +37,7 @@ void setup() {
   // ====================== Init Display ======================= 
 
   
-  // ====================== Init Sensors =======================
+  // =================== Init Sensors / Fan ====================
 
 
   // =================== Init Communication ====================
@@ -56,22 +57,49 @@ void loop() {
   
   switch (State){
     case STATE_GameInit :
-      Delay = DELAY_GameInit;
+      // Init state
+      if(StateOld != STATE_GameInit){
+        
+        Delay = DELAY_GameInit;
+        StateOld = STATE_GameInit;
+      }
+      
+      
       State = GameInit();
       break;
       
     case STATE_Game :
-      Delay = DELAY_Game;
+      // Init state
+      if(StateOld != STATE_Game){
+        
+        Delay = DELAY_Game;
+        StateOld = STATE_Game;
+      }
+      
+      
       State = Game();
       break;
       
     case STATE_TimeOver :
-      Delay = DELAY_TimeOver;
+      // Init state
+      if(StateOld != STATE_TimeOver){
+        
+        Delay = DELAY_TimeOver;
+        StateOld = STATE_TimeOver;
+      }
+      
+      
       State = TimeOver();
       break;
       
     case STATE_Break :
-      Delay = DELAY_Break;
+      // Init state
+      if(StateOld != STATE_Break){
+        
+        Delay = DELAY_Break;
+        StateOld = STATE_Break;
+      }
+      
       State = Break();
       break;
   }
