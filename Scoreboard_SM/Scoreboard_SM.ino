@@ -387,6 +387,9 @@ void DisplayTeams(uint16_t score1, uint16_t score2){
 }
 
 bool ConfirmWin(uint16_t Border){
+  // The point history of one team needs to be 
+  // consistently above the given border
+  
   bool T1_won = true;
   bool T2_won = true;
       
@@ -403,6 +406,9 @@ bool ConfirmWin(uint16_t Border){
 }
 
 bool ConfirmWin(uint16_t borderT1, uint16_t borderT2){
+  // The point history of one team needs to be 
+  // consistently above its own given border
+  
   bool T1_won = true;
   bool T2_won = true;
       
