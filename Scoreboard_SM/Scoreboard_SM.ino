@@ -209,19 +209,9 @@ uint8_t Game(){
   // If one team got to max score wait until the score has been confirmed through 
   // multiple measurements.
   if(scoreT1 == MAX_Score || scoreT2 == MAX_Score){
-    bool T1_won = true;
-    bool T2_won = true;
+    bool validWin = ConfirmWin(MAX_Score-1);
 
-    for(int i=0;i<MAX_Score_Hist;i++){
-      if(Score_Hist[1][i]<MAX_Score){
-        T1_won = false;
-      }
-      if(Score_Hist[1][i]<MAX_Score){
-        T2_won = false;
-      }
-    } // end Hist check
-
-    if(T1_won || T2_won){
+    if(validWin){
       return STATE_Break;
     }
   }
@@ -264,19 +254,9 @@ uint8_t TimeOver(uint16_t TO_ScoreT1, uint16_t TO_ScoreT2){
 
     if (teamWon){
       // Confirm win with multiple measurements
-      bool T1_won = true;
-      bool T2_won = true;
+      bool validWin = ConfirmWin(winningBar);
       
-      for(int i=0;i<MAX_Score_Hist;i++){
-        if(Score_Hist[1][i]<=winningBar){
-          T1_won = false;
-        }
-        if(Score_Hist[1][i]<=winningBar){
-          T2_won = false;
-        }
-      }
-
-      if(T1_won || T2_won){
+      if(validWin){
         return STATE_Break;
       }
       else{
@@ -295,19 +275,9 @@ uint8_t TimeOver(uint16_t TO_ScoreT1, uint16_t TO_ScoreT2){
     if(teamScored && !universe){
       // One team scored, time is over and no universe
       // Confirm win with multiple measurements
-      bool T1_won = true;
-      bool T2_won = true;
-      
-      for(int i=0;i<MAX_Score_Hist;i++){
-        if(Score_Hist[1][i]<=TO_ScoreT1){
-          T1_won = false;
-        }
-        if(Score_Hist[1][i]<=TO_ScoreT2){
-          T2_won = false;
-        }
-      }
+      bool validWin = ConfirmWin(TO_ScoreT1,TO_ScoreT2);
 
-      if(T1_won || T2_won){
+      if(validWin){
         return STATE_Break;
       }
       else{
@@ -414,4 +384,36 @@ void DisplayTeams(uint16_t score1, uint16_t score2){
   // Team 2 is right
 
   // ++++++++++++++++ TODO ++++++++++++++++
+}
+
+bool ConfirmWin(uint16_t Border){
+  bool T1_won = true;
+  bool T2_won = true;
+      
+  for(int i=0;i<MAX_Score_Hist;i++){
+    if(Score_Hist[0][i]<=Border){
+      T1_won = false;
+    }
+    if(Score_Hist[1][i]<=Border){
+      T2_won = false;
+    }
+  }
+
+  return (T1_won || T2_won);
+}
+
+bool ConfirmWin(uint16_t borderT1, uint16_t borderT2){
+  bool T1_won = true;
+  bool T2_won = true;
+      
+  for(int i=0;i<MAX_Score_Hist;i++){
+    if(Score_Hist[0][i]<=borderT1){
+      T1_won = false;
+    }
+    if(Score_Hist[1][i]<=borderT2){
+      T2_won = false;
+    }
+  }
+
+  return (T1_won || T2_won);
 }
