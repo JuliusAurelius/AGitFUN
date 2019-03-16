@@ -17,6 +17,8 @@
 #define MAX_Score       15
 #define MAX_Score_Hist  4
 
+bool      CapOne;              // Winning Team has to score one more point
+
 uint8_t   State;
 uint8_t   StateOld;
 uint32_t  Delay;
@@ -25,7 +27,8 @@ uint16_t  ID_Chip;
 uint16_t  Score_Hist[2][MAX_Score_Hist];
 uint32_t  iHist;
 bool      TimeIsOver;
-
+uint16_t  TO_ScoreT1;
+uint16_t  TO_ScoreT2;
 
 // Team Variables
 //Team 1 is left / Team 2 is right, seen from the display
@@ -52,13 +55,19 @@ void setup() {
   Delay = 100;
   Score = 0;
   iHist = 0;
+  
   TimeIsOver = false;
+  TO_ScoreT1 = 0;
+  TO_ScoreT2 = 0;
+  
   ID_Chip = 1;
+  CapOne  = false;
 }
 
 void loop() {
   
   ReadInbox();
+  
   
   switch (State){
     case STATE_GameInit :
@@ -94,12 +103,22 @@ void loop() {
       // Init state
       if(StateOld != STATE_TimeOver){
         TimeIsOver  = false;
+        
+        if(iHist>0){
+          TO_ScoreT1  = Score_Hist[0][iHist-1];
+          TO_ScoreT2  = Score_Hist[1][iHist-1];
+        }
+        else{
+          TO_ScoreT1  = Score_Hist[0][MAX_Score_Hist];
+          TO_ScoreT2  = Score_Hist[1][MAX_Score_Hist];
+        }
+        
         Delay       = DELAY_TimeOver;
         StateOld    = STATE_TimeOver;
       }
       
       
-      State = TimeOver();
+      State = TimeOver(TO_ScoreT1,TO_ScoreT2);
       break;
       
     case STATE_Break :
@@ -113,8 +132,6 @@ void loop() {
       State = Break();
       break;
   }
-
-  SendScore();
   
   delay(Delay);
 }
@@ -216,7 +233,7 @@ uint8_t Game(){
   }
 }
 
-uint8_t TimeOver(){
+uint8_t TimeOver(uint16_t TO_ScoreT1, uint16_t TO_ScoreT2){
   //________________________________________________________________________________________
   // 1) Score difference >= 2 || 0 -> No Universe / currently Universe
   // 2) Score difference == 1 -> Possible Universe
@@ -224,6 +241,51 @@ uint8_t TimeOver(){
   // Exit Condition 1: Point was scored, no Universe  Go To: STATE_Break
   //________________________________________________________________________________________
 
+  uint16_t scoreT1 = ReadScore(1);
+  uint16_t scoreT2 = ReadScore(2);
+
+  Score_Hist[1][iHist] = scoreT1;
+  Score_Hist[2][iHist] = scoreT2;
+  
+  iHist++;
+  if (iHist==MAX_Score_Hist){
+    iHist = 0;
+  }
+
+  // Publish score
+  SetScore(scoreT1, scoreT2);
+  SendScore();
+  DisplayTeams(scoreT1, scoreT2);
+
+  if(CapOne){
+    uint16_t winningBar = (TO_ScoreT1<TO_ScoreT2) ? TO_ScoreT2:TO_ScoreT1;
+    bool teamWon = (scoreT1>winningBar) || (scoreT2>winningBar);
+
+    if (teamWon){
+      return STATE_Break;
+    }
+    else{
+      return STATE_TimeOver;
+    }
+  }
+  else{
+    bool universe = (TO_ScoreT1==TO_ScoreT2);
+    bool teamScored = (scoreT1>TO_ScoreT1)||(scoreT2>TO_ScoreT2);
+
+    
+    if(teamScored && !universe){
+      // One team scored, time is over and no universe
+      return STATE_Break;
+    }
+    else{
+      // Either no team scored, or it's universe
+      return STATE_TimeOver;
+    }
+  }
+  
+
+  
+  
   // ++++++++++++++++ TODO ++++++++++++++++
 }
 
