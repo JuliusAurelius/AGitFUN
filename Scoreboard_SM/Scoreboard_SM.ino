@@ -320,11 +320,6 @@ uint8_t TimeOver(uint16_t TO_ScoreT1, uint16_t TO_ScoreT2){
       return STATE_TimeOver;
     }
   }
-  
-
-  
-  
-  // ++++++++++++++++ TODO ++++++++++++++++
 }
 
 uint8_t Break(){
