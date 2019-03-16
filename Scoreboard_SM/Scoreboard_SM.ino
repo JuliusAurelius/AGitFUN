@@ -207,11 +207,32 @@ uint8_t Break(){
 // ================================= Additional Functions  ================================= 
 
 void ReadInbox(){
+  //________________________________________________________________________________________
+  // 1) Set Teams_Next & TeamID_Next
+  // 2) Set TimeIsOver (reset happens automatically with state change)
+  //________________________________________________________________________________________
+  
   // ++++++++++++++++ TODO ++++++++++++++++
+
+  if(false){
+    TimeIsOver = true;
+  }
+
+  if(false){
+    Teams_Next[0] = "ArsLudendi";
+    Teams_Next[1] = "ArsBibendi";
+
+    TeamID_Next[0] = 1;     //16bit
+    TeamID_Next[1] = 65535; //16bit
+  }
 }
 
 
 void SendScore(){
+  //________________________________________________________________________________________
+  // 1) Send the variable Score 
+  //      -> 64bit sorted in [Team ID 1, Score T1, Team ID 2, Score T2], all 16 bit
+  //________________________________________________________________________________________
   // ++++++++++++++++ TODO ++++++++++++++++
 }
 
@@ -222,7 +243,7 @@ void SetScore(uint16_t ScoreT1, uint16_t ScoreT2){
 // [32..47] Team ID 2
 // [48..63] Score Team 2
 
-Score = TeamID_Current[0] | (uint64_t)ScoreT1<<16 | (uint64_t)TeamID_Current[0]<<32 | (uint64_t)ScoreT2<<48;
+Score = (uint64_t)TeamID_Current[0] | (uint64_t)ScoreT1<<16 | (uint64_t)TeamID_Current[0]<<32 | (uint64_t)ScoreT2<<48;
 }
 
 
