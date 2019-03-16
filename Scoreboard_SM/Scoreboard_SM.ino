@@ -65,6 +65,11 @@ void loop() {
       // Init state
       if(StateOld != STATE_GameInit){
         TimeIsOver = false;
+
+        Teams_Current[0]  = Teams_Next[0];
+        Teams_Current[1]  = Teams_Next[1];
+        TeamID_Current[0] = TeamID_Next[2];
+        TeamID_Current[1] = TeamID_Next[2];
         
         DisplayTeams();
         
@@ -124,7 +129,37 @@ uint8_t GameInit(){
   // Exit Condition 2: Time is over                   Go To: STATE_TimeOver
   //________________________________________________________________________________________
 
-  // ++++++++++++++++ TODO ++++++++++++++++
+  uint16_t scoreT1 = ReadScore(1);
+  uint16_t scoreT2 = ReadScore(2);
+
+  Score_Hist[1][iHist] = scoreT1;
+  Score_Hist[2][iHist] = scoreT2;
+  
+  iHist++;
+  if (iHist==MAX_Score_Hist){
+    iHist = 0;
+  }
+
+  // Publish score
+  SetScore(scoreT1, scoreT2);
+  SendScore();
+  DisplayTeams(scoreT1, scoreT2);
+  
+  // Register Button press    ++++++++++++++++ TODO ++++++++++++++++
+  if(false){
+    SwitchTeams();
+    DisplayTeams();
+  }
+
+  if(scoreT1 == 3 || scoreT2 == 3){
+    return STATE_Game;
+  }
+
+  if(TimeIsOver){
+    return STATE_TimeOver;
+  }
+
+  return STATE_GameInit;
 }
 
 uint8_t Game(){
