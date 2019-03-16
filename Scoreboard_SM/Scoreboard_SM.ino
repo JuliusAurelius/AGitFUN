@@ -237,6 +237,7 @@ uint8_t TimeOver(uint16_t TO_ScoreT1, uint16_t TO_ScoreT2){
   //________________________________________________________________________________________
   // 1) Score difference >= 2 || 0 -> No Universe / currently Universe
   // 2) Score difference == 1 -> Possible Universe
+  // 3) Check for CapOne Game mode
   //
   // Exit Condition 1: Point was scored, no Universe  Go To: STATE_Break
   //________________________________________________________________________________________
@@ -262,7 +263,25 @@ uint8_t TimeOver(uint16_t TO_ScoreT1, uint16_t TO_ScoreT2){
     bool teamWon = (scoreT1>winningBar) || (scoreT2>winningBar);
 
     if (teamWon){
-      return STATE_Break;
+      // Confirm win with multiple measurements
+      bool T1_won = true;
+      bool T2_won = true;
+      
+      for(int i=0;i<MAX_Score_Hist;i++){
+        if(Score_Hist[1][i]<=winningBar){
+          T1_won = false;
+        }
+        if(Score_Hist[1][i]<=winningBar){
+          T2_won = false;
+        }
+      }
+
+      if(T1_won || T2_won){
+        return STATE_Break;
+      }
+      else{
+        return STATE_TimeOver;
+      }
     }
     else{
       return STATE_TimeOver;
@@ -275,7 +294,26 @@ uint8_t TimeOver(uint16_t TO_ScoreT1, uint16_t TO_ScoreT2){
     
     if(teamScored && !universe){
       // One team scored, time is over and no universe
-      return STATE_Break;
+      // Confirm win with multiple measurements
+      bool T1_won = true;
+      bool T2_won = true;
+      
+      for(int i=0;i<MAX_Score_Hist;i++){
+        if(Score_Hist[1][i]<=TO_ScoreT1){
+          T1_won = false;
+        }
+        if(Score_Hist[1][i]<=TO_ScoreT2){
+          T2_won = false;
+        }
+      }
+
+      if(T1_won || T2_won){
+        return STATE_Break;
+      }
+      else{
+        return STATE_TimeOver;
+      }
+      
     }
     else{
       // Either no team scored, or it's universe
