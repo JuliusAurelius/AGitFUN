@@ -356,6 +356,31 @@ uint16_t ReadScore(uint8_t team){
   }
 }
 
+uint16_t ReadScoreWire(uint8_t team){
+  // If the raw cable idea is used
+  uint16_t di_Pins_T1[] = {1,2,3,4};
+  uint16_t di_Pins_T2[] = {5,6,7,8};
+
+  uint16_t wire0;
+  uint16_t wire1;
+  uint16_t wire2;
+  uint16_t wire3;
+  
+  if(team & 1){
+    wire0 = digitalRead(di_Pins_T1[0]);
+    wire1 = digitalRead(di_Pins_T1[1]);
+    wire2 = digitalRead(di_Pins_T1[2]);
+    wire3 = digitalRead(di_Pins_T1[3]);
+  }
+  else{
+    wire0 = digitalRead(di_Pins_T2[0]);
+    wire1 = digitalRead(di_Pins_T2[1]);
+    wire2 = digitalRead(di_Pins_T2[2]);
+    wire3 = digitalRead(di_Pins_T2[3]);
+  }
+
+  return wire3<<3 | wire2<<2 | wire1<<1 | wire0;
+}
 
 void SwitchTeams(){
   // Names
