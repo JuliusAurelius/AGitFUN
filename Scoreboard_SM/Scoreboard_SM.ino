@@ -11,10 +11,10 @@
 #define STATE_TimeOver  3
 #define STATE_Break     4
 
-#define DELAY_GameInit  1     // reduced delay to register button press
-#define DELAY_Game      100
-#define DELAY_TimeOver  100
-#define DELAY_Break     10    // reduced delay to register button press
+#define DELAY_GameInit  1000     // reduced delay to register button press
+#define DELAY_Game      1000
+#define DELAY_TimeOver  1000
+#define DELAY_Break     1000    // reduced delay to register button press
 
 #define MAX_Score       15
 #define MAX_Score_Hist  4
@@ -44,8 +44,8 @@ Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 void setup() {
   // =======================(Init Serial)=======================
-
-  
+  Serial.begin(9600);
+  Serial.println("Starting...");
   // ====================== Init Display ======================= 
 
   
@@ -70,6 +70,8 @@ void setup() {
 
 
   SendStartUpReport();
+
+  Serial.println("Started.");
 }
 
 void loop() {
@@ -79,6 +81,7 @@ void loop() {
   
   switch (State){
     case STATE_GameInit :
+      Serial.println("State: GameInit");
       // Init state
       if(StateOld != STATE_GameInit){
         TimeIsOver = false;
@@ -98,6 +101,7 @@ void loop() {
       break;
       
     case STATE_Game :
+      Serial.println("State: Game");
       // Init state
       if(StateOld != STATE_Game){
         Delay     = DELAY_Game;
@@ -108,6 +112,7 @@ void loop() {
       break;
       
     case STATE_TimeOver :
+      Serial.println("State: TimeOver");
       // Init state
       if(StateOld != STATE_TimeOver){
         TimeIsOver  = false;
@@ -130,6 +135,7 @@ void loop() {
       break;
       
     case STATE_Break :
+      Serial.println("State: Break");
       // Init state
       if(StateOld != STATE_Break){
         TimeIsOver  = false;
@@ -142,6 +148,8 @@ void loop() {
   }
   
   delay(Delay);
+
+  
 }
 
 // ==================================== State Functions ==================================== 
