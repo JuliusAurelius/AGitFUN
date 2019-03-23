@@ -224,7 +224,7 @@ uint8_t Game(){
 
   // If one team got to max score wait until the score has been confirmed through 
   // multiple measurements.
-  if(scoreT1 == MAX_Score || scoreT2 == MAX_Score){
+  if(scoreT1 >= MAX_Score || scoreT2 >= MAX_Score){
     bool validWin = ConfirmWin(MAX_Score-1);
 
     if(validWin){
@@ -350,6 +350,7 @@ void SendScore(){
   //      -> 64bit sorted in [Team ID 1, Score T1, Team ID 2, Score T2], all 16 bit
   //________________________________________________________________________________________
   // ++++++++++++++++ TODO ++++++++++++++++
+  Serial.println((int)Score,BIN);
 }
 
 void SendStartUpReport(){
@@ -365,17 +366,32 @@ void SetScore(uint16_t ScoreT1, uint16_t ScoreT2){
 // [32..47] Team ID 2
 // [48..63] Score Team 2
 
-Score = (uint64_t)TeamID_Current[0] | (uint64_t)ScoreT1<<16 | (uint64_t)TeamID_Current[0]<<32 | (uint64_t)ScoreT2<<48;
+Score = (uint64_t)TeamID_Current[0]<<48 | (uint64_t)ScoreT1<<32 | (uint64_t)TeamID_Current[1]<<16 | (uint64_t)ScoreT2<<0;
 }
 
 
 uint16_t ReadScore(uint8_t team){
+  
+  uint8_t incoming = 0;
+  if(Serial.available()>0){
+    incoming=1;
+    short data = Serial.read();
+  }
+  Serial.flush();
+
+  
   if(team & 1){
     // ++++++++++++++++ TODO ++++++++++++++++
+    return (uint16_t) (Score>>32) + incoming;
   }
   else{
     // ++++++++++++++++ TODO ++++++++++++++++
+    return (uint16_t) (Score) + incoming;
   }
+  Serial.print("Received:");
+  Serial.print(incoming);
+  Serial.print("\n");
+  return (uint16_t)incoming;
 }
 
 uint16_t ReadScoreWire(uint8_t team){
@@ -453,6 +469,8 @@ void DisplayTeams(uint16_t score1, uint16_t score2){
 bool ConfirmWin(uint16_t Border){
   // The point history of one team needs to be 
   // consistently above the given border
+
+  Serial.println("Checking win");
   
   bool T1_won = true;
   bool T2_won = true;
@@ -472,6 +490,7 @@ bool ConfirmWin(uint16_t Border){
 bool ConfirmWin(uint16_t borderT1, uint16_t borderT2){
   // The point history of one team needs to be 
   // consistently above its own given border
+  Serial.println("Checking win");
   
   bool T1_won = true;
   bool T2_won = true;
