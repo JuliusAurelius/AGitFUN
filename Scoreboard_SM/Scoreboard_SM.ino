@@ -4,8 +4,6 @@
  * Date:    2019.03.15
  */
 
-#include "Adafruit_VL53L0X.h"
-
 #define STATE_GameInit  1
 #define STATE_Game      2
 #define STATE_TimeOver  3
@@ -39,8 +37,6 @@ String    Teams_Next[2];
 uint16_t  TeamID_Current[2];
 uint16_t  TeamID_Next[2];
 
-// _______ VL53L0X Laser Sensor _______
-Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 void setup() {
   // =======================(Init Serial)=======================
@@ -50,7 +46,7 @@ void setup() {
 
   
   // =================== Init Sensors / Fan ====================
-  bool SEN_Laser = lox.begin();
+
 
   // =================== Init Communication ====================
 
@@ -393,49 +389,6 @@ uint16_t ReadScore(uint8_t team){
   Serial.print(incoming);
   Serial.print("\n");
   return (uint16_t)incoming;
-}
-
-uint16_t ReadScoreWire(uint8_t team){
-  // If the raw cable idea is used
-  uint16_t di_Pins_T1[] = {1,2,3,4};
-  uint16_t di_Pins_T2[] = {5,6,7,8};
-
-  uint16_t wire0;
-  uint16_t wire1;
-  uint16_t wire2;
-  uint16_t wire3;
-  
-  if(team & 1){
-    wire0 = digitalRead(di_Pins_T1[0]);
-    wire1 = digitalRead(di_Pins_T1[1]);
-    wire2 = digitalRead(di_Pins_T1[2]);
-    wire3 = digitalRead(di_Pins_T1[3]);
-  }
-  else{
-    wire0 = digitalRead(di_Pins_T2[0]);
-    wire1 = digitalRead(di_Pins_T2[1]);
-    wire2 = digitalRead(di_Pins_T2[2]);
-    wire3 = digitalRead(di_Pins_T2[3]);
-  }
-
-  return wire3<<3 | wire2<<2 | wire1<<1 | wire0;
-}
-
-uint16_t ReadScoreLaser(uint8_t team){
-  VL53L0X_RangingMeasurementData_t measure;
-
-  lox.rangingTest(&measure, false); // pass in 'true' to get debug data printout!
-  if (measure.RangeStatus != 4) {  // phase failures have incorrect data
-    Serial.print("Distance (mm): "); Serial.println(measure.RangeMilliMeter);
-  } else {
-    Serial.println(" out of range ");
-  }
-  if(team & 1){
-    // ++++++++++++++++ TODO ++++++++++++++++
-  }
-  else{
-    // ++++++++++++++++ TODO ++++++++++++++++
-  }
 }
 
 void SwitchTeams(){
