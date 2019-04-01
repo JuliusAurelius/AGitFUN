@@ -16,7 +16,6 @@
 
 #define MAX_Score       15
 #define MAX_Score_Hist  4
-
 #define US1_echoPin     7       // Ultra Sonic Echo Pin, Sensor 1
 #define US1_trigPin     8       // Ultra Sonic Trigger Pin, Sensor 1
 #define US2_echoPin     9       // Ultra Sonic Echo Pin, Sensor 2
@@ -34,7 +33,7 @@ uint32_t  iHist;
 bool      TimeIsOver;
 uint16_t  TO_ScoreT1;
 uint16_t  TO_ScoreT2;
-
+long      ScoreDist[15];
 // Team Variables
 //Team 1 is left / Team 2 is right, seen from the display
 String    Teams_Current[2];
@@ -52,13 +51,22 @@ void setup() {
   
   // =================== Init Sensors / Fan ====================
   // Ultra Sonic Range 
-
+  // Sensor 1
+  pinMode(US1_trigPin, OUTPUT);
+  pinMode(US1_echoPin, INPUT);
+  // Sensor 2
+  pinMode(US2_trigPin, OUTPUT);
+  pinMode(US2_echoPin, INPUT);
+  // Score distances:
+  long ScoreDist[] = {0,10,20,30,40,50,60,70,80,90,100,110,120,
+                      130,140}; // in cm
+  
   // =================== Init Communication ====================
 
 
   // ======================== Init Main ========================
   State = STATE_GameInit;
-  Delay = 100;
+  Delay = 1000;
   Score = 0;
   iHist = 0;
   
@@ -147,6 +155,11 @@ void loop() {
       State = Break();
       break;
   }
+  if (Delay < 100){
+    Serial.print("\nERROR_Delay : ");
+    Serial.print(Delay);
+    Delay = 1000;
+  }
   
   delay(Delay);
 
@@ -208,6 +221,9 @@ uint8_t Game(){
   uint16_t scoreT1 = ReadScore(1);
   uint16_t scoreT2 = ReadScore(2);
 
+  Serial.print("\nRead for Team 1: ");
+  Serial.print(scoreT1);
+  
   Score_Hist[1][iHist] = scoreT1;
   Score_Hist[2][iHist] = scoreT2;
   
@@ -373,18 +389,70 @@ Score = (uint64_t)TeamID_Current[0]<<48 | (uint64_t)ScoreT1<<32 | (uint64_t)Team
 
 
 uint16_t ReadScore(uint8_t team){
-  
-  uint8_t incoming = 0;
-  
-  
+  //________________________________________________________________________________________
+  // 1) Read the distance of the required team
+  // 2) Call dist2Score to get the score
+  //________________________________________________________________________________________
+  long duration;
+  long distance;
+
   if(team & 1){
-    // ++++++++++++++++ TODO ++++++++++++++++
-    return (uint16_t) (Score>>32) + incoming;
+    digitalWrite(US1_trigPin, LOW); 
+    delayMicroseconds(2); 
+
+    digitalWrite(US1_trigPin, HIGH);
+    delayMicroseconds(10); 
+ 
+    digitalWrite(US1_trigPin, LOW);
+    duration = pulseIn(US1_echoPin, HIGH);
   }
+  
   else{
-    // ++++++++++++++++ TODO ++++++++++++++++
-    return (uint16_t) (Score) + incoming;
+    digitalWrite(US1_trigPin, LOW);         // Change again to US2_***  !!!!
+    delayMicroseconds(2); 
+
+    digitalWrite(US1_trigPin, HIGH);        // Change again to US2_***  !!!!
+    delayMicroseconds(10); 
+ 
+    digitalWrite(US1_trigPin, LOW);         // Change again to US2_***  !!!!
+    duration = pulseIn(US1_echoPin, HIGH);  // Change again to US2_***  !!!!
   }
+  
+  //Calculate the distance (in cm) based on the speed of sound.
+  distance = duration/58.2;
+  Serial.print("\ndistance in cm: ");
+  Serial.print(distance);
+  
+  return dist2Score(distance);
+}
+
+uint16_t dist2Score(long distance){
+  //________________________________________________________________________________________
+  // 1) Check what distances in ScoreDist are shorter than the measurement
+  // 2.1) Return 15-i since the measurement is from top down
+  // 2.2) Return 0 because the measurement is longer than the entries
+  //________________________________________________________________________________________
+  uint16_t i = 0;
+  uint16_t result = 0;
+  while(ScoreDist[i]<distance && i<=14){
+    if(ScoreDist[i+1]>=distance){
+      // ScoreDist[i] is smaller equal & ScoreDist[i+1] is greater -> index resemples score
+      result = (15-i);
+    }
+    i++;
+    if(i>14){
+      break;
+    }
+    Serial.print(i);
+  }
+
+  if(result<0){
+    result = 0;
+  }
+
+  Serial.print("\nRead score: ");
+  Serial.print(result);
+  return result;
 }
 
 void SwitchTeams(){
