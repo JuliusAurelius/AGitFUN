@@ -17,7 +17,12 @@
 #define MAX_Score       15
 #define MAX_Score_Hist  4
 
-bool      CapOne;              // Winning Team has to score one more point
+#define US1_echoPin     7       // Ultra Sonic Echo Pin, Sensor 1
+#define US1_trigPin     8       // Ultra Sonic Trigger Pin, Sensor 1
+#define US2_echoPin     9       // Ultra Sonic Echo Pin, Sensor 2
+#define US2_trigPin     10      // Ultra Sonic Trigger Pin, Sensor 2
+
+bool      CapOne;               // Winning Team has to score one more point
 
 uint8_t   State;
 uint8_t   StateOld;
@@ -46,7 +51,7 @@ void setup() {
 
   
   // =================== Init Sensors / Fan ====================
-
+  // Ultra Sonic Range 
 
   // =================== Init Communication ====================
 
@@ -370,12 +375,7 @@ Score = (uint64_t)TeamID_Current[0]<<48 | (uint64_t)ScoreT1<<32 | (uint64_t)Team
 uint16_t ReadScore(uint8_t team){
   
   uint8_t incoming = 0;
-  if(Serial.available()>0){
-    incoming=1;
-    short data = Serial.read();
-  }
-  Serial.flush();
-
+  
   
   if(team & 1){
     // ++++++++++++++++ TODO ++++++++++++++++
@@ -385,10 +385,6 @@ uint16_t ReadScore(uint8_t team){
     // ++++++++++++++++ TODO ++++++++++++++++
     return (uint16_t) (Score) + incoming;
   }
-  Serial.print("Received:");
-  Serial.print(incoming);
-  Serial.print("\n");
-  return (uint16_t)incoming;
 }
 
 void SwitchTeams(){
