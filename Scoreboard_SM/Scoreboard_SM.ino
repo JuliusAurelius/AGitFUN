@@ -1,8 +1,8 @@
 /*
- * Version  0.1
- * Author:  MB
- * Date:    2019.03.15
- */
+   Version  0.1
+   Author:  MB
+   Date:    2019.03.15
+*/
 
 #define STATE_GameInit  1
 #define STATE_Game      2
@@ -18,8 +18,8 @@
 #define MAX_Score_Hist  4
 #define US1_echoPin     7       // Ultra Sonic Echo Pin, Sensor 1
 #define US1_trigPin     8       // Ultra Sonic Trigger Pin, Sensor 1
-#define US2_echoPin     9       // Ultra Sonic Echo Pin, Sensor 2
-#define US2_trigPin     10      // Ultra Sonic Trigger Pin, Sensor 2
+#define US2_echoPin     7       // Ultra Sonic Echo Pin, Sensor 2       // Change!
+#define US2_trigPin     8       // Ultra Sonic Trigger Pin, Sensor 2    // Change!
 
 bool      CapOne;               // Winning Team has to score one more point
 
@@ -33,7 +33,8 @@ uint32_t  iHist;
 bool      TimeIsOver;
 uint16_t  TO_ScoreT1;
 uint16_t  TO_ScoreT2;
-long      ScoreDist[15];
+long      ScoreDist[15] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120,
+                      130, 140}; // in cm;
 // Team Variables
 //Team 1 is left / Team 2 is right, seen from the display
 String    Teams_Current[2];
@@ -46,21 +47,18 @@ void setup() {
   // =======================(Init Serial)=======================
   Serial.begin(9600);
   Serial.println("Starting...");
-  // ====================== Init Display ======================= 
+  // ====================== Init Display =======================
 
-  
+
   // =================== Init Sensors / Fan ====================
-  // Ultra Sonic Range 
+  // Ultra Sonic Range
   // Sensor 1
   pinMode(US1_trigPin, OUTPUT);
   pinMode(US1_echoPin, INPUT);
   // Sensor 2
   pinMode(US2_trigPin, OUTPUT);
   pinMode(US2_echoPin, INPUT);
-  // Score distances:
-  long ScoreDist[] = {0,10,20,30,40,50,60,70,80,90,100,110,120,
-                      130,140}; // in cm
-  
+
   // =================== Init Communication ====================
 
 
@@ -69,11 +67,11 @@ void setup() {
   Delay = 1000;
   Score = 0;
   iHist = 0;
-  
+
   TimeIsOver = false;
   TO_ScoreT1 = 0;
   TO_ScoreT2 = 0;
-  
+
   ID_Chip = 1;
   CapOne  = false;
 
@@ -84,90 +82,96 @@ void setup() {
 }
 
 void loop() {
-  
+
   ReadInbox();
-  
-  
-  switch (State){
+
+
+  switch (State) {
     case STATE_GameInit :
       Serial.println("State: GameInit");
       // Init state
-      if(StateOld != STATE_GameInit){
+      if (StateOld != STATE_GameInit) {
         TimeIsOver = false;
 
         Teams_Current[0]  = Teams_Next[0];
         Teams_Current[1]  = Teams_Next[1];
         TeamID_Current[0] = TeamID_Next[2];
         TeamID_Current[1] = TeamID_Next[2];
-        
+
         DisplayTeams();
-        
+
         Delay     = DELAY_GameInit;
         StateOld  = STATE_GameInit;
       }
-      
+
       State = GameInit();
-      break;
       
+      if(State != STATE_GameInit){
+        Serial.print("\nLeaving GameInit, going to ");
+        Serial.print(State);
+      }
+      break;
+
     case STATE_Game :
       Serial.println("State: Game");
       // Init state
-      if(StateOld != STATE_Game){
+      if (StateOld != STATE_Game) {
         Delay     = DELAY_Game;
         StateOld  = STATE_Game;
       }
-      
+
       State = Game();
       break;
-      
+
     case STATE_TimeOver :
       Serial.println("State: TimeOver");
       // Init state
-      if(StateOld != STATE_TimeOver){
+      if (StateOld != STATE_TimeOver) {
         TimeIsOver  = false;
-        
-        if(iHist>0){
-          TO_ScoreT1  = Score_Hist[0][iHist-1];
-          TO_ScoreT2  = Score_Hist[1][iHist-1];
+
+        if (iHist > 0) {
+          TO_ScoreT1  = Score_Hist[0][iHist - 1];
+          TO_ScoreT2  = Score_Hist[1][iHist - 1];
         }
-        else{
+        else {
           TO_ScoreT1  = Score_Hist[0][MAX_Score_Hist];
           TO_ScoreT2  = Score_Hist[1][MAX_Score_Hist];
         }
-        
+
         Delay       = DELAY_TimeOver;
         StateOld    = STATE_TimeOver;
       }
-      
-      
-      State = TimeOver(TO_ScoreT1,TO_ScoreT2);
+
+
+      State = TimeOver(TO_ScoreT1, TO_ScoreT2);
       break;
-      
+
     case STATE_Break :
       Serial.println("State: Break");
       // Init state
-      if(StateOld != STATE_Break){
+      if (StateOld != STATE_Break) {
         TimeIsOver  = false;
         Delay       = DELAY_Break;
         StateOld    = STATE_Break;
       }
-      
+
       State = Break();
       break;
   }
-  if (Delay < 100){
+  if (Delay < 100) {
     Serial.print("\nERROR_Delay : ");
     Serial.print(Delay);
+    Serial.print("\n");
     Delay = 1000;
   }
-  
+
   delay(Delay);
 
-  
+
 }
 
-// ==================================== State Functions ==================================== 
-uint8_t GameInit(){
+// ==================================== State Functions ====================================
+uint8_t GameInit() {
   //________________________________________________________________________________________
   // 1) Make sure new score is set / old score is not copied
   // 2) Allow teams to switch sides on the board
@@ -181,9 +185,9 @@ uint8_t GameInit(){
 
   Score_Hist[1][iHist] = scoreT1;
   Score_Hist[2][iHist] = scoreT2;
-  
+
   iHist++;
-  if (iHist==MAX_Score_Hist){
+  if (iHist == MAX_Score_Hist) {
     iHist = 0;
   }
 
@@ -191,29 +195,29 @@ uint8_t GameInit(){
   SetScore(scoreT1, scoreT2);
   SendScore();
   DisplayTeams(scoreT1, scoreT2);
-  
+
   // Register Button press    ++++++++++++++++ TODO ++++++++++++++++
-  if(false){
+  if (false) {
     SwitchTeams();
     DisplayTeams();
   }
 
-  if(scoreT1 == 3 || scoreT2 == 3){
+  if (scoreT1 == 3 || scoreT2 == 3) {
     return STATE_Game;
   }
 
-  if(TimeIsOver){
+  if (TimeIsOver) {
     return STATE_TimeOver;
   }
 
   return STATE_GameInit;
 }
 
-uint8_t Game(){
+uint8_t Game() {
   //________________________________________________________________________________________
   // 1) Keep track of the score
   // 2) Do not allow team-side changes anymore
-  // 
+  //
   // Exit Condition 1: One team reaches max score     Go To: STATE_Break
   // Exit Condition 2: Time is over                   Go To: STATE_TimeOver
   //________________________________________________________________________________________
@@ -223,12 +227,12 @@ uint8_t Game(){
 
   Serial.print("\nRead for Team 1: ");
   Serial.print(scoreT1);
-  
+
   Score_Hist[1][iHist] = scoreT1;
   Score_Hist[2][iHist] = scoreT2;
-  
+
   iHist++;
-  if (iHist==MAX_Score_Hist){
+  if (iHist == MAX_Score_Hist) {
     iHist = 0;
   }
 
@@ -239,24 +243,24 @@ uint8_t Game(){
   DisplayTeams(scoreT1, scoreT2);
 
 
-  // If one team got to max score wait until the score has been confirmed through 
+  // If one team got to max score wait until the score has been confirmed through
   // multiple measurements.
-  if(scoreT1 >= MAX_Score || scoreT2 >= MAX_Score){
-    bool validWin = ConfirmWin(MAX_Score-1);
+  if (scoreT1 >= MAX_Score || scoreT2 >= MAX_Score) {
+    bool validWin = ConfirmWin(MAX_Score - 1);
 
-    if(validWin){
+    if (validWin) {
       return STATE_Break;
     }
   }
-  else{
-    if(TimeIsOver){
+  else {
+    if (TimeIsOver) {
       return STATE_TimeOver;
     }
     return STATE_Game;
   }
 }
 
-uint8_t TimeOver(uint16_t TO_ScoreT1, uint16_t TO_ScoreT2){
+uint8_t TimeOver(uint16_t TO_ScoreT1, uint16_t TO_ScoreT2) {
   //________________________________________________________________________________________
   // 1) Score difference >= 2 || 0 -> No Universe / currently Universe
   // 2) Score difference == 1 -> Possible Universe
@@ -270,9 +274,9 @@ uint8_t TimeOver(uint16_t TO_ScoreT1, uint16_t TO_ScoreT2){
 
   Score_Hist[1][iHist] = scoreT1;
   Score_Hist[2][iHist] = scoreT2;
-  
+
   iHist++;
-  if (iHist==MAX_Score_Hist){
+  if (iHist == MAX_Score_Hist) {
     iHist = 0;
   }
 
@@ -281,54 +285,54 @@ uint8_t TimeOver(uint16_t TO_ScoreT1, uint16_t TO_ScoreT2){
   SendScore();
   DisplayTeams(scoreT1, scoreT2);
 
-  if(CapOne){
-    uint16_t winningBar = (TO_ScoreT1<TO_ScoreT2) ? TO_ScoreT2:TO_ScoreT1;
-    bool teamWon = (scoreT1>winningBar) || (scoreT2>winningBar);
+  if (CapOne) {
+    uint16_t winningBar = (TO_ScoreT1 < TO_ScoreT2) ? TO_ScoreT2 : TO_ScoreT1;
+    bool teamWon = (scoreT1 > winningBar) || (scoreT2 > winningBar);
 
-    if (teamWon){
+    if (teamWon) {
       // Confirm win with multiple measurements
       bool validWin = ConfirmWin(winningBar);
-      
-      if(validWin){
+
+      if (validWin) {
         return STATE_Break;
       }
-      else{
+      else {
         return STATE_TimeOver;
       }
     }
-    else{
+    else {
       return STATE_TimeOver;
     }
   }
-  else{
-    bool universe = (TO_ScoreT1==TO_ScoreT2);
-    bool teamScored = (scoreT1>TO_ScoreT1)||(scoreT2>TO_ScoreT2);
+  else {
+    bool universe = (TO_ScoreT1 == TO_ScoreT2);
+    bool teamScored = (scoreT1 > TO_ScoreT1) || (scoreT2 > TO_ScoreT2);
 
-    
-    if(teamScored && !universe){
+
+    if (teamScored && !universe) {
       // One team scored, time is over and no universe
       // Confirm win with multiple measurements
-      bool validWin = ConfirmWin(TO_ScoreT1,TO_ScoreT2);
+      bool validWin = ConfirmWin(TO_ScoreT1, TO_ScoreT2);
 
-      if(validWin){
+      if (validWin) {
         return STATE_Break;
       }
-      else{
+      else {
         return STATE_TimeOver;
       }
-      
+
     }
-    else{
+    else {
       // Either no team scored, or it's universe
       return STATE_TimeOver;
     }
   }
 }
 
-uint8_t Break(){
+uint8_t Break() {
   //________________________________________________________________________________________
   // 1) Wait until GameTime is running (Display Count Down?)
-  // 2) Allow Teams to switch sides 
+  // 2) Allow Teams to switch sides
   //________________________________________________________________________________________
 
   // ++++++++++++++++ TODO ++++++++++++++++
@@ -338,21 +342,21 @@ uint8_t Break(){
 
 
 
-// ================================= Additional Functions  ================================= 
+// ================================= Additional Functions  =================================
 
-void ReadInbox(){
+void ReadInbox() {
   //________________________________________________________________________________________
   // 1) Set Teams_Next & TeamID_Next
   // 2) Set TimeIsOver (reset happens automatically with state change)
   //________________________________________________________________________________________
-  
+
   // ++++++++++++++++ TODO ++++++++++++++++
 
-  if(false){
+  if (false) {
     TimeIsOver = true;
   }
 
-  if(false){
+  if (false) {
     Teams_Next[0] = "ArsLudendi";
     Teams_Next[1] = "ArsBibendi";
 
@@ -362,100 +366,99 @@ void ReadInbox(){
 }
 
 
-void SendScore(){
+void SendScore() {
   //________________________________________________________________________________________
-  // 1) Send the variable Score 
+  // 1) Send the variable Score
   //      -> 64bit sorted in [Team ID 1, Score T1, Team ID 2, Score T2], all 16 bit
   //________________________________________________________________________________________
   // ++++++++++++++++ TODO ++++++++++++++++
-  Serial.println((int)Score,BIN);
+  Serial.println("\nScore in BIN: ");
+  Serial.println((int)Score, BIN);
 }
 
-void SendStartUpReport(){
+void SendStartUpReport() {
   //________________________________________________________________________________________
   // 1) Send if sensors were started correctly
   //________________________________________________________________________________________
   // ++++++++++++++++ TODO ++++++++++++++++
 }
 
-void SetScore(uint16_t ScoreT1, uint16_t ScoreT2){
-// [0..15]  Team ID 1
-// [16..31] Score Team 1
-// [32..47] Team ID 2
-// [48..63] Score Team 2
+void SetScore(uint16_t ScoreT1, uint16_t ScoreT2) {
+  // [0..15]  Team ID 1
+  // [16..31] Score Team 1
+  // [32..47] Team ID 2
+  // [48..63] Score Team 2
 
-Score = (uint64_t)TeamID_Current[0]<<48 | (uint64_t)ScoreT1<<32 | (uint64_t)TeamID_Current[1]<<16 | (uint64_t)ScoreT2<<0;
+  Score = (uint64_t)TeamID_Current[0] << 48 | (uint64_t)ScoreT1 << 32 | (uint64_t)TeamID_Current[1] << 16 | (uint64_t)ScoreT2 << 0;
 }
 
 
-uint16_t ReadScore(uint8_t team){
+uint16_t ReadScore(uint8_t team) {
   //________________________________________________________________________________________
   // 1) Read the distance of the required team
   // 2) Call dist2Score to get the score
   //________________________________________________________________________________________
-  long duration;
   long distance;
 
-  if(team & 1){
-    digitalWrite(US1_trigPin, LOW); 
-    delayMicroseconds(2); 
-
-    digitalWrite(US1_trigPin, HIGH);
-    delayMicroseconds(10); 
- 
-    digitalWrite(US1_trigPin, LOW);
-    duration = pulseIn(US1_echoPin, HIGH);
+  if (team & 1) {
+    distance = readUS(US1_trigPin, US1_echoPin);
   }
-  
-  else{
-    digitalWrite(US1_trigPin, LOW);         // Change again to US2_***  !!!!
-    delayMicroseconds(2); 
 
-    digitalWrite(US1_trigPin, HIGH);        // Change again to US2_***  !!!!
-    delayMicroseconds(10); 
- 
-    digitalWrite(US1_trigPin, LOW);         // Change again to US2_***  !!!!
-    duration = pulseIn(US1_echoPin, HIGH);  // Change again to US2_***  !!!!
+  else {
+    distance = readUS(US2_trigPin, US2_echoPin);
+
   }
-  
-  //Calculate the distance (in cm) based on the speed of sound.
-  distance = duration/58.2;
-  Serial.print("\ndistance in cm: ");
-  Serial.print(distance);
-  
+
   return dist2Score(distance);
 }
 
-uint16_t dist2Score(long distance){
+long readUS(int Trig, int Echo) {
+  //________________________________________________________________________________________
+  // 1) Read the Ultra Sonic Sensor and calculate the distance in cm
+  //________________________________________________________________________________________
+  int trigPin = Trig;
+  int echoPin = Echo;
+  long duration, distance;
+  
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  
+  duration = pulseIn(echoPin, HIGH);
+  
+  distance = (duration / 2) / 29.1;
+
+  return distance;
+}
+
+uint16_t dist2Score(long distance) {
   //________________________________________________________________________________________
   // 1) Check what distances in ScoreDist are shorter than the measurement
   // 2.1) Return 15-i since the measurement is from top down
   // 2.2) Return 0 because the measurement is longer than the entries
   //________________________________________________________________________________________
   uint16_t i = 0;
-  uint16_t result = 0;
-  while(ScoreDist[i]<distance && i<=14){
-    if(ScoreDist[i+1]>=distance){
+  uint16_t score = 0;
+  while (ScoreDist[i] < distance) {
+    if (ScoreDist[i + 1] >= distance) {
       // ScoreDist[i] is smaller equal & ScoreDist[i+1] is greater -> index resemples score
-      result = (15-i);
+      score = (15 - i);
     }
     i++;
-    if(i>14){
+    if (i > 14) {
       break;
     }
-    Serial.print(i);
   }
-
-  if(result<0){
-    result = 0;
+  
+  if (score < 0) {
+    score = 0;
   }
-
-  Serial.print("\nRead score: ");
-  Serial.print(result);
-  return result;
+  return score;
 }
 
-void SwitchTeams(){
+void SwitchTeams() {
   // Names
   String newT2      = Teams_Current[0];
   Teams_Current[0]  = Teams_Current[1];
@@ -468,7 +471,7 @@ void SwitchTeams(){
 }
 
 
-void DisplayTeams(){
+void DisplayTeams() {
   // Display Teams with arrow
   // Team 1 is left
   // Team 2 is right
@@ -476,7 +479,7 @@ void DisplayTeams(){
   // ++++++++++++++++ TODO ++++++++++++++++
 }
 
-void DisplayTeams(uint16_t score1, uint16_t score2){
+void DisplayTeams(uint16_t score1, uint16_t score2) {
   // Display Teams with arrow
   // Team 1 is left
   // Team 2 is right
@@ -484,20 +487,20 @@ void DisplayTeams(uint16_t score1, uint16_t score2){
   // ++++++++++++++++ TODO ++++++++++++++++
 }
 
-bool ConfirmWin(uint16_t Border){
-  // The point history of one team needs to be 
+bool ConfirmWin(uint16_t Border) {
+  // The point history of one team needs to be
   // consistently above the given border
 
   Serial.println("Checking win");
-  
+
   bool T1_won = true;
   bool T2_won = true;
-      
-  for(int i=0;i<MAX_Score_Hist;i++){
-    if(Score_Hist[0][i]<=Border){
+
+  for (int i = 0; i < MAX_Score_Hist; i++) {
+    if (Score_Hist[0][i] <= Border) {
       T1_won = false;
     }
-    if(Score_Hist[1][i]<=Border){
+    if (Score_Hist[1][i] <= Border) {
       T2_won = false;
     }
   }
@@ -505,19 +508,19 @@ bool ConfirmWin(uint16_t Border){
   return (T1_won || T2_won);
 }
 
-bool ConfirmWin(uint16_t borderT1, uint16_t borderT2){
-  // The point history of one team needs to be 
+bool ConfirmWin(uint16_t borderT1, uint16_t borderT2) {
+  // The point history of one team needs to be
   // consistently above its own given border
   Serial.println("Checking win");
-  
+
   bool T1_won = true;
   bool T2_won = true;
-      
-  for(int i=0;i<MAX_Score_Hist;i++){
-    if(Score_Hist[0][i]<=borderT1){
+
+  for (int i = 0; i < MAX_Score_Hist; i++) {
+    if (Score_Hist[0][i] <= borderT1) {
       T1_won = false;
     }
-    if(Score_Hist[1][i]<=borderT2){
+    if (Score_Hist[1][i] <= borderT2) {
       T2_won = false;
     }
   }
