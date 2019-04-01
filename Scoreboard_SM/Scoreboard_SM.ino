@@ -82,9 +82,9 @@ void setup() {
 }
 
 void loop() {
-
+  Serial.print("\nReading the inbox");
   ReadInbox();
-
+  
 
   switch (State) {
     case STATE_GameInit :
@@ -158,6 +158,9 @@ void loop() {
       State = Break();
       break;
   }
+
+  Serial.print("\nFinished the SM, checking delay");
+  
   if (Delay < 100) {
     Serial.print("\nERROR_Delay : ");
     Serial.print(Delay);
@@ -165,8 +168,13 @@ void loop() {
     Delay = 1000;
   }
 
-  delay(Delay);
+  if (Delay > 2000){
+    Serial.print("\nDelay too big: ");
+    Serial.print(Delay);
+  }
 
+  delay(Delay);
+  
 
 }
 
@@ -179,7 +187,7 @@ uint8_t GameInit() {
   // Exit Condition 1: One Team reaches 3 points      Go To: STATE_Game
   // Exit Condition 2: Time is over                   Go To: STATE_TimeOver
   //________________________________________________________________________________________
-
+  Serial.print("\nReading Score");
   uint16_t scoreT1 = ReadScore(1);
   uint16_t scoreT2 = ReadScore(2);
 
@@ -188,14 +196,18 @@ uint8_t GameInit() {
 
   iHist++;
   if (iHist == MAX_Score_Hist) {
+    Serial.print("\nReset iHist");
     iHist = 0;
   }
 
   // Publish score
+  Serial.print("\nSetting score");
   SetScore(scoreT1, scoreT2);
   SendScore();
   DisplayTeams(scoreT1, scoreT2);
-
+  Serial.print("\nDisplayed Teams");
+  
+        
   // Register Button press    ++++++++++++++++ TODO ++++++++++++++++
   if (false) {
     SwitchTeams();
@@ -203,13 +215,15 @@ uint8_t GameInit() {
   }
 
   if (scoreT1 == 3 || scoreT2 == 3) {
+    Serial.print("\nGoint to Game State");
     return STATE_Game;
   }
 
   if (TimeIsOver) {
+    Serial.print("\nGoint to TimeOver State");
     return STATE_TimeOver;
   }
-
+  Serial.print("\nStaying in GameInit");
   return STATE_GameInit;
 }
 
