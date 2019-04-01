@@ -27,6 +27,7 @@ uint8_t   State;
 uint8_t   StateOld;
 uint32_t  Delay;
 uint64_t  Score;              // Message to Motherchip
+uint16_t  ScoreArr[4];
 uint16_t  ID_Chip;
 uint16_t  Score_Hist[2][MAX_Score_Hist];
 uint32_t  iHist;
@@ -89,9 +90,10 @@ void loop() {
 
   switch (State) {
     case STATE_GameInit :
-      Serial.println("State: GameInit");
+      //Serial.println("State: GameInit");
       // Init state
       if (StateOld != STATE_GameInit) {
+        Serial.println("init GameInit");
         TimeIsOver = false;
 
         Teams_Current[0]  = Teams_Next[0];
@@ -106,11 +108,13 @@ void loop() {
       }
 
       State = GameInit();
+      checkDelay("GI_nach State", DELAY_GameInit);   //<--- check Delay
       
       if(State != STATE_GameInit){
         Serial.print("\nLeaving GameInit, going to ");
         Serial.print(State);
       }
+      
       break;
 
     case STATE_Game :
@@ -159,18 +163,16 @@ void loop() {
       State = Break();
       break;
   }
-
-  Serial.print("\nFinished the SM, checking delay");
   
   if (Delay < 100) {
-    Serial.print("\nERROR_Delay : ");
+    Serial.print("\n++++++++ ERROR_Delay : ");
     Serial.print(Delay);
     Serial.print("\n");
     Delay = 1000;
   }
 
   if (Delay > 2000){
-    Serial.print("\nDelay too big: ");
+    Serial.print("\n++++++++ ERROR_Delay too big: ");
     Serial.print(Delay);
     Delay = 1000;
   }
@@ -189,7 +191,6 @@ uint8_t GameInit() {
   // Exit Condition 1: One Team reaches 3 points      Go To: STATE_Game
   // Exit Condition 2: Time is over                   Go To: STATE_TimeOver
   //________________________________________________________________________________________
-  Serial.print("\nReading Score");
   uint16_t scoreT1 = ReadScore(1);
   uint16_t scoreT2 = ReadScore(2);
 
@@ -201,14 +202,15 @@ uint8_t GameInit() {
     Serial.print("\nReset iHist");
     iHist = 0;
   }
-
+  
+  checkDelay("GIS_nach Lesen", DELAY_GameInit);  //<--- check Delay
+  
   // Publish score
-  Serial.print("\nSetting score");
   SetScore(scoreT1, scoreT2);
   SendScore();
   DisplayTeams(scoreT1, scoreT2);
-  Serial.print("\nDisplayed Teams");
   
+  //checkDelay("GIS_Plublish", DELAY_GameInit);    //<--- check Delay
         
   // Register Button press    ++++++++++++++++ TODO ++++++++++++++++
   if (false) {
@@ -240,9 +242,6 @@ uint8_t Game() {
 
   uint16_t scoreT1 = ReadScore(1);
   uint16_t scoreT2 = ReadScore(2);
-
-  Serial.print("\nRead for Team 1: ");
-  Serial.print(scoreT1);
 
   Score_Hist[1][iHist] = scoreT1;
   Score_Hist[2][iHist] = scoreT2;
@@ -388,8 +387,17 @@ void SendScore() {
   //      -> 64bit sorted in [Team ID 1, Score T1, Team ID 2, Score T2], all 16 bit
   //________________________________________________________________________________________
   // ++++++++++++++++ TODO ++++++++++++++++
-  Serial.println("\nScore in BIN: ");
-  Serial.println((int)Score, BIN);
+//  Serial.println("\nScore in BIN: ");
+//  Serial.println((int)Score, BIN);
+
+  Serial.print("\n TeamID 1: ");
+  Serial.print(ScoreArr[0]);
+  Serial.print(", TeamID 2: ");
+  Serial.print(ScoreArr[2]);
+  Serial.print("\n Score 1 : ");
+  Serial.print(ScoreArr[1]);
+  Serial.print(", Score 2: ");
+  Serial.print(ScoreArr[3]);
 }
 
 void SendStartUpReport() {
@@ -404,19 +412,15 @@ void SetScore(uint16_t ScoreT1, uint16_t ScoreT2) {
   // [16..31] Score Team 1
   // [32..47] Team ID 2
   // [48..63] Score Team 2
-  Serial.print("\n TeamID 1: ");
-  Serial.print(TeamID_Current[0]);
-  Serial.print(", TeamID 2: ");
-  Serial.print(TeamID_Current[1]);
-  Serial.print("\n Score 1 : ");
-  Serial.print(ScoreT1);
-  Serial.print(", Score 2: ");
-  Serial.print(ScoreT2);
-
-
-  uint64_t tmpScore = -1;
-  Score = (((uint64_t)TeamID_Current[0] << 48) | ((uint64_t)ScoreT1 << 32) | ((uint64_t)TeamID_Current[1] << 16) | ((uint64_t)ScoreT2 << 0));
   
+
+
+  //uint64_t tmpScore = -1;
+  //Score = ((uint64_t)(TeamID_Current[0] << 48) | ((uint64_t)ScoreT1 << 32) | ((uint64_t)TeamID_Current[1] << 16) | ((uint64_t)ScoreT2 << 0));
+  ScoreArr[0] = TeamID_Current[0];
+  ScoreArr[1] = ScoreT1;
+  ScoreArr[2] = TeamID_Current[1];
+  ScoreArr[3] = ScoreT2;
 }
 
 
@@ -553,4 +557,12 @@ bool ConfirmWin(uint16_t borderT1, uint16_t borderT2) {
   }
 
   return (T1_won || T2_won);
+}
+
+void checkDelay(String place, int StateDelay){
+  if(Delay != StateDelay){
+    Serial.println("***************** Delay Error *****************");
+    Serial.println(place);
+    Delay = StateDelay;
+  }
 }
