@@ -75,14 +75,15 @@ void setup() {
   ID_Chip = 1;
   CapOne  = false;
 
-
+  TeamID_Next[0] = 1;     // For testing
+  TeamID_Next[1] = 3;
+  
   SendStartUpReport();
 
   Serial.println("Started.");
 }
 
 void loop() {
-  Serial.print("\nReading the inbox");
   ReadInbox();
   
 
@@ -95,8 +96,8 @@ void loop() {
 
         Teams_Current[0]  = Teams_Next[0];
         Teams_Current[1]  = Teams_Next[1];
-        TeamID_Current[0] = TeamID_Next[2];
-        TeamID_Current[1] = TeamID_Next[2];
+        TeamID_Current[0] = TeamID_Next[0];
+        TeamID_Current[1] = TeamID_Next[1];
 
         DisplayTeams();
 
@@ -171,6 +172,7 @@ void loop() {
   if (Delay > 2000){
     Serial.print("\nDelay too big: ");
     Serial.print(Delay);
+    Delay = 1000;
   }
 
   delay(Delay);
@@ -402,8 +404,19 @@ void SetScore(uint16_t ScoreT1, uint16_t ScoreT2) {
   // [16..31] Score Team 1
   // [32..47] Team ID 2
   // [48..63] Score Team 2
+  Serial.print("\n TeamID 1: ");
+  Serial.print(TeamID_Current[0]);
+  Serial.print(", TeamID 2: ");
+  Serial.print(TeamID_Current[1]);
+  Serial.print("\n Score 1 : ");
+  Serial.print(ScoreT1);
+  Serial.print(", Score 2: ");
+  Serial.print(ScoreT2);
 
-  Score = (uint64_t)TeamID_Current[0] << 48 | (uint64_t)ScoreT1 << 32 | (uint64_t)TeamID_Current[1] << 16 | (uint64_t)ScoreT2 << 0;
+
+  uint64_t tmpScore = -1;
+  Score = (((uint64_t)TeamID_Current[0] << 48) | ((uint64_t)ScoreT1 << 32) | ((uint64_t)TeamID_Current[1] << 16) | ((uint64_t)ScoreT2 << 0));
+  
 }
 
 
