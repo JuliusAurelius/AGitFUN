@@ -78,13 +78,15 @@ void setup() {
 
   TeamID_Next[0] = 1;     // For testing
   TeamID_Next[1] = 3;
+  TeamID_Current[0] = 2;
+  TeamID_Current[1] = 4;
   
   SendStartUpReport();
 
   Serial.println("Started.");
 }
 
-void loop() {
+void loop() { //############################## LOOP #########################
   ReadInbox();
   
 
@@ -199,7 +201,11 @@ void loop() {
   }
 
   delay(Delay);
-}
+}//######################################## LOOP END #########################
+
+
+
+
 
 // ==================================== State Functions ====================================
 uint8_t GameInit() {
@@ -222,7 +228,7 @@ uint8_t GameInit() {
     iHist = 0;
   }
   
-  checkDelay("GIS_nach Lesen", DELAY_GameInit);  //<--- check Delay
+  //checkDelay("GIS_nach Lesen", DELAY_GameInit);  //<--- check Delay
   
   // Publish score
   SetScore(scoreT1, scoreT2);
@@ -249,6 +255,9 @@ uint8_t GameInit() {
   Serial.print("\nStaying in GameInit");
   return STATE_GameInit;
 }
+
+
+
 
 uint8_t Game() {
   //________________________________________________________________________________________
@@ -293,6 +302,9 @@ uint8_t Game() {
     return STATE_Game;
   }
 }
+
+
+
 
 uint8_t TimeOver(uint16_t TO_ScoreT1, uint16_t TO_ScoreT2) {
   //________________________________________________________________________________________
@@ -363,6 +375,10 @@ uint8_t TimeOver(uint16_t TO_ScoreT1, uint16_t TO_ScoreT2) {
   }
 }
 
+
+
+
+
 uint8_t Break() {
   //________________________________________________________________________________________
   // 1) Wait until GameTime is running (Display Count Down?)
@@ -372,6 +388,9 @@ uint8_t Break() {
   // ++++++++++++++++ TODO ++++++++++++++++
   return STATE_GameInit;
 }
+
+
+
 
 
 
@@ -400,6 +419,8 @@ void ReadInbox() {
 }
 
 
+
+
 void SendScore() {
   //________________________________________________________________________________________
   // 1) Send the variable Score
@@ -418,6 +439,10 @@ void SendScore() {
   Serial.print(", Score 2: ");
   Serial.print(ScoreArr[3]);
 }
+
+
+
+
 
 void SendStartUpReport() {
   //________________________________________________________________________________________
@@ -443,6 +468,9 @@ void SetScore(uint16_t ScoreT1, uint16_t ScoreT2) {
 }
 
 
+
+
+
 uint16_t ReadScore(uint8_t team) {
   //________________________________________________________________________________________
   // 1) Read the distance of the required team
@@ -461,6 +489,9 @@ uint16_t ReadScore(uint8_t team) {
 
   return dist2Score(distance);
 }
+
+
+
 
 long readUS(int Trig, int Echo) {
   //________________________________________________________________________________________
@@ -482,6 +513,9 @@ long readUS(int Trig, int Echo) {
 
   return distance;
 }
+
+
+
 
 uint16_t dist2Score(long distance) {
   //________________________________________________________________________________________
@@ -521,6 +555,8 @@ void SwitchTeams() {
 }
 
 
+
+
 void DisplayTeams() {
   // Display Teams with arrow
   // Team 1 is left
@@ -529,6 +565,9 @@ void DisplayTeams() {
   // ++++++++++++++++ TODO ++++++++++++++++
 }
 
+
+
+
 void DisplayTeams(uint16_t score1, uint16_t score2) {
   // Display Teams with arrow
   // Team 1 is left
@@ -536,6 +575,9 @@ void DisplayTeams(uint16_t score1, uint16_t score2) {
 
   // ++++++++++++++++ TODO ++++++++++++++++
 }
+
+
+
 
 bool ConfirmWin(uint16_t Border) {
   // The point history of one team needs to be
@@ -558,6 +600,9 @@ bool ConfirmWin(uint16_t Border) {
   return (T1_won || T2_won);
 }
 
+
+
+
 bool ConfirmWin(uint16_t borderT1, uint16_t borderT2) {
   // The point history of one team needs to be
   // consistently above its own given border
@@ -577,6 +622,9 @@ bool ConfirmWin(uint16_t borderT1, uint16_t borderT2) {
 
   return (T1_won || T2_won);
 }
+
+
+
 
 void checkDelay(String place, int StateDelay){
   if(Delay != StateDelay){
