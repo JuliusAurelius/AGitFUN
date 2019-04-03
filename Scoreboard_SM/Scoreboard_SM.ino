@@ -18,30 +18,30 @@
 #define MAX_Score_Hist  4
 #define US1_echoPin     7       // Ultra Sonic Echo Pin, Sensor 1
 #define US1_trigPin     8       // Ultra Sonic Trigger Pin, Sensor 1
-#define US2_echoPin     7       // Ultra Sonic Echo Pin, Sensor 2       // Change!
-#define US2_trigPin     8       // Ultra Sonic Trigger Pin, Sensor 2    // Change!
+#define US2_echoPin     9       // Ultra Sonic Echo Pin, Sensor 2       // Change!
+#define US2_trigPin     10       // Ultra Sonic Trigger Pin, Sensor 2    // Change!
 
-bool      CapOne;               // Winning Team has to score one more point
+static bool      CapOne;               // Winning Team has to score one more point
 
-uint8_t   State;
-uint8_t   StateOld;
-uint32_t  Delay;
-uint64_t  Score;              // Message to Motherchip
-uint16_t  ScoreArr[4];
-uint16_t  ID_Chip;
-uint16_t  Score_Hist[2][MAX_Score_Hist];
-uint32_t  iHist;
-bool      TimeIsOver;
-uint16_t  TO_ScoreT1;
-uint16_t  TO_ScoreT2;
-long      ScoreDist[15] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120,
+static uint8_t   State;
+static uint8_t   StateOld;
+static uint32_t  Delay;
+static uint64_t  Score;              // Message to Motherchip
+static uint16_t  ScoreArr[4];
+static uint16_t  ID_Chip;
+static uint16_t  Score_Hist[2][MAX_Score_Hist];
+static uint32_t  iHist;
+static bool      TimeIsOver;
+static uint16_t  TO_ScoreT1;
+static uint16_t  TO_ScoreT2;
+static long      ScoreDist[15] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120,
                       130, 140}; // in cm;
 // Team Variables
 //Team 1 is left / Team 2 is right, seen from the display
-String    Teams_Current[2];
-String    Teams_Next[2];
-uint16_t  TeamID_Current[2];
-uint16_t  TeamID_Next[2];
+static String    Teams_Current[2];
+static String    Teams_Next[2];
+static uint16_t  TeamID_Current[2];
+static uint16_t  TeamID_Next[2];
 
 
 void setup() {
@@ -87,7 +87,7 @@ void setup() {
 }
 
 void loop() { //############################## LOOP #########################
-  ReadInbox();
+  //ReadInbox();
   
 
   switch (State) {
@@ -228,20 +228,20 @@ uint8_t GameInit() {
     iHist = 0;
   }
   
-  //checkDelay("GIS_nach Lesen", DELAY_GameInit);  //<--- check Delay
+  checkDelay("GIS_nach Lesen", DELAY_GameInit);  //<--- check Delay
   
   // Publish score
   SetScore(scoreT1, scoreT2);
   SendScore();
   DisplayTeams(scoreT1, scoreT2);
   
-  //checkDelay("GIS_Plublish", DELAY_GameInit);    //<--- check Delay
+  checkDelay("GIS_Plublish", DELAY_GameInit);    //<--- check Delay
         
   // Register Button press    ++++++++++++++++ TODO ++++++++++++++++
-  if (false) {
-    SwitchTeams();
-    DisplayTeams();
-  }
+//  if (false) {
+//    SwitchTeams();
+//    DisplayTeams();
+//  }
 
   if (scoreT1 == 3 || scoreT2 == 3) {
     Serial.print("\nGoint to Game State");
@@ -465,6 +465,15 @@ void SetScore(uint16_t ScoreT1, uint16_t ScoreT2) {
   ScoreArr[1] = ScoreT1;
   ScoreArr[2] = TeamID_Current[1];
   ScoreArr[3] = ScoreT2;
+
+  Serial.print("\n TeamID 1 (stored): ");
+  Serial.print(TeamID_Current[0]);
+  Serial.print("\n TeamID 1 (ScoreArr): ");
+  Serial.print(ScoreArr[0]);
+  Serial.print("\n TeamID 2 (stored): ");
+  Serial.print(TeamID_Current[1]);
+  Serial.print("\n TeamID 2 (ScoreArr): ");
+  Serial.print(ScoreArr[2]);
 }
 
 
@@ -550,8 +559,8 @@ void SwitchTeams() {
 
   // IDs
   uint16_t newT2ID  = TeamID_Current[0];
-  TeamID_Current[0] = TeamID_Current[0];
-  TeamID_Current[0] = newT2ID;
+  TeamID_Current[0] = TeamID_Current[1];
+  TeamID_Current[1] = newT2ID;
 }
 
 
@@ -628,7 +637,7 @@ bool ConfirmWin(uint16_t borderT1, uint16_t borderT2) {
 
 void checkDelay(String place, int StateDelay){
   if(Delay != StateDelay){
-    Serial.println("***************** Delay Error *****************");
+    Serial.println("\n***************** Delay Error *****************");
     Serial.println(place);
     Delay = StateDelay;
   }
