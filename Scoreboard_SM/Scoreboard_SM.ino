@@ -89,10 +89,10 @@ void loop() {
   
 
   switch (State) {
-    case STATE_GameInit :
+    case STATE_GameInit : //+++++++++++++++++ STATE GAME INIT +++++++++++++++ 
       //Serial.println("State: GameInit");
       // Init state
-      if (StateOld != STATE_GameInit) {
+      if (StateOld != STATE_GameInit) { //---------- Init State ---------- //
         Serial.println("init GameInit");
         TimeIsOver = false;
 
@@ -102,38 +102,47 @@ void loop() {
         TeamID_Current[1] = TeamID_Next[1];
 
         DisplayTeams();
-
-        Delay     = DELAY_GameInit;
-        StateOld  = STATE_GameInit;
       }
 
+      Delay     = DELAY_GameInit;
+      StateOld  = STATE_GameInit;
+      
       State = GameInit();
       checkDelay("GI_nach State", DELAY_GameInit);   //<--- check Delay
       
-      if(State != STATE_GameInit){
+      if(State != STATE_GameInit){      //---------- Leave State --------- //
         Serial.print("\nLeaving GameInit, going to ");
         Serial.print(State);
       }
       
       break;
 
-    case STATE_Game :
+    case STATE_Game : //++++++++++++++++++++++++++ STATE GAME +++++++++++++++ 
       Serial.println("State: Game");
       // Init state
-      if (StateOld != STATE_Game) {
-        Delay     = DELAY_Game;
-        StateOld  = STATE_Game;
+      if (StateOld != STATE_Game) { //-------------- Init State ---------- //
+        
       }
 
+      Delay     = DELAY_Game;
+      StateOld  = STATE_Game;
+      
       State = Game();
+
+      if(State != STATE_Game){      //-------------- Leave State --------- //
+        Serial.print("\nLeaving Game, going to ");
+        Serial.print(State);
+      }
+      
       break;
 
-    case STATE_TimeOver :
+    case STATE_TimeOver : //++++++++++++++++++ STATE TIME OVER +++++++++++++++ 
       Serial.println("State: TimeOver");
       // Init state
-      if (StateOld != STATE_TimeOver) {
+      if (StateOld != STATE_TimeOver) { //----------- Init State ---------- //
         TimeIsOver  = false;
 
+        // Save score the state was entered with
         if (iHist > 0) {
           TO_ScoreT1  = Score_Hist[0][iHist - 1];
           TO_ScoreT2  = Score_Hist[1][iHist - 1];
@@ -142,25 +151,37 @@ void loop() {
           TO_ScoreT1  = Score_Hist[0][MAX_Score_Hist];
           TO_ScoreT2  = Score_Hist[1][MAX_Score_Hist];
         }
-
-        Delay       = DELAY_TimeOver;
-        StateOld    = STATE_TimeOver;
       }
 
-
+      Delay       = DELAY_TimeOver;
+      StateOld    = STATE_TimeOver;
+      
       State = TimeOver(TO_ScoreT1, TO_ScoreT2);
+
+      if(State != STATE_TimeOver){      //---------- Leave State --------- //
+        Serial.print("\nLeaving TimeOver, going to ");
+        Serial.print(State);
+      }
+      
       break;
 
-    case STATE_Break :
+    case STATE_Break : //++++++++++++++++++++++++ STATE BREAK +++++++++++++++ 
       Serial.println("State: Break");
       // Init state
-      if (StateOld != STATE_Break) {
+      if (StateOld != STATE_Break) { //------------- Init State ---------- //
         TimeIsOver  = false;
-        Delay       = DELAY_Break;
-        StateOld    = STATE_Break;
       }
 
+      Delay       = DELAY_Break;
+      StateOld    = STATE_Break;
+      
       State = Break();
+
+      if(State != STATE_Break){      //------------- Leave State --------- //
+        Serial.print("\nLeaving Break, going to ");
+        Serial.print(State);
+      }
+      
       break;
   }
   
@@ -178,8 +199,6 @@ void loop() {
   }
 
   delay(Delay);
-  
-
 }
 
 // ==================================== State Functions ====================================
