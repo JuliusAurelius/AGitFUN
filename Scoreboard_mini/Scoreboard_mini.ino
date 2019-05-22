@@ -68,7 +68,7 @@ long readUS(int Trig, int Echo) {
   long duration, distance;
   
   digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
+  delayMicroseconds(5);
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
